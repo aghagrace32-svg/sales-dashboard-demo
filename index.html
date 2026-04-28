@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Performance Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #00e5a0;
+    --accent2: #0066ff;
+    --warn: #ff6b35;
+    --yellow: #ffd166;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --good: #00e5a0;
+    --bad: #ff4757;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+  }
+
+  .date-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    padding: 28px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .page-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  /* AGENT TABS */
+  .agent-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .tab:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* SCORECARDS ROW */
+  .scorecards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .scorecard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .scorecard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .scorecard.warn::before { background: var(--warn); }
+  .scorecard.yellow::before { background: var(--yellow); }
+  .scorecard.blue::before { background: var(--accent2); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .sc-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 10px;
+  }
+
+  .sc-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .sc-value.green { color: var(--good); }
+  .sc-value.red { color: var(--bad); }
+  .sc-value.yellow { color: var(--yellow); }
+
+  .sc-delta {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .sc-delta span { color: var(--accent); }
+  .sc-delta span.down { color: var(--bad); }
+
+  /* GRID LAYOUT */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .card-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(0,229,160,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,229,160,0.2);
+  }
+
+  .card-badge.warn {
+    background: rgba(255,107,53,0.1);
+    color: var(--warn);
+    border-color: rgba(255,107,53,0.2);
+  }
+
+  /* LEAD FUNNEL */
+  .funnel-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .funnel-label {
+    font-size: 12px;
+    color: var(--muted);
+    width: 110px;
+    flex-shrink: 0;
+  }
+
+  .funnel-bar-wrap {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 28px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .funnel-bar {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+    color: #000;
+    transition: width 1s ease;
+  }
+
+  .funnel-count {
+    font-size: 12px;
+    color: var(--text);
+    width: 30px;
+    text-align: right;
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  /* CALL COMPLIANCE */
+  .compliance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .comp-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+
+  .comp-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .comp-bar-wrap {
+    background: var(--bg);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .comp-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.2s ease;
+  }
+
+  .comp-pct {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* LEADS TABLE */
+  .leads-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .leads-table th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    padding: 0 12px 12px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .leads-table td {
+    padding: 11px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(30,35,48,0.5);
+    vertical-align: middle;
+  }
+
+  .leads-table tr:last-child td { border-bottom: none; }
+
+  .leads-table tr:hover td {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .priority-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .p-hot { background: rgba(255,71,87,0.15); color: #ff4757; }
+  .p-warm { background: rgba(255,209,102,0.15); color: #ffd166; }
+  .p-cold { background: rgba(90,96,112,0.15); color: #8890a0; }
+
+  .status-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-green { background: var(--good); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-red { background: var(--bad); }
+  .dot-blue { background: var(--accent2); }
+
+  .overdue {
+    color: var(--bad);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .ontrack {
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* PERFORMANCE SCORE RING */
+  .score-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0;
+  }
+
+  .ring-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+  }
+
+  .ring-container svg {
+    transform: rotate(-90deg);
+  }
+
+  .ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .ring-pct {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+
+  .ring-sub {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .ring-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ALERT FLAGS */
+  .alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .alert-item.red { border-left: 3px solid var(--bad); }
+  .alert-item.yellow { border-left: 3px solid var(--yellow); }
+  .alert-item.green { border-left: 3px solid var(--good); }
+
+  .alert-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .alert-text { color: var(--text); line-height: 1.5; }
+  .alert-time { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 2px; }
+
+  /* DAILY CHART */
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 100px;
+    padding-top: 10px;
+  }
+
+  .chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 1s ease;
+    position: relative;
+  }
+
+  .chart-bar:hover::after {
+    content: attr(data-val);
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .chart-day {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  /* AGENT COMPARE */
+  .agent-compare {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .agent-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .agent-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .agent-name-col {
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .agent-name {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .agent-role {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .agent-bar-wrap {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+  }
+
+  .agent-bar {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    color: #000;
+    transition: width 1.2s ease;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .scorecards { grid-template-columns: repeat(3, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .main { padding: 20px 16px; }
+  }
+
+  @media (max-width: 600px) {
+    .scorecards { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">INBOUND MARKETING — SALES OPS</div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+    <div class="date-label" id="currentDate"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Agent Performance Dashboard</div>
+  <div class="page-sub">Real-time monitoring · Call compliance · Lead funnel · Daily scoring</div>
+
+  <!-- AGENT TABS -->
+  <div class="agent-tabs">
+    <div class="tab active" onclick="switchAgent('all')">All Agents</div>
+    <div class="tab" onclick="switchAgent('marcus')">Marcus T.</div>
+    <div class="tab" onclick="switchAgent('diana')">Diana R.</div>
+    <div class="tab" onclick="switchAgent('cole')">Cole M.</div>
+  </div>
+
+  <!-- SCORECARDS -->
+  <div class="scorecards" id="scorecards">
+    <div class="scorecard">
+      <div class="sc-label">Total Calls Today</div>
+      <div class="sc-value" id="sc-calls">47</div>
+      <div class="sc-delta"><span>+12%</span> vs yesterday</div>
+    </div>
+    <div class="scorecard yellow">
+      <div class="sc-label">Follow-ups Due</div>
+      <div class="sc-value yellow" id="sc-followups">9</div>
+      <div class="sc-delta"><span class="down">3 overdue</span></div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-label">Conversion Rate</div>
+      <div class="sc-value green" id="sc-conv">34%</div>
+      <div class="sc-delta"><span>+4%</span> vs last week</div>
+    </div>
+    <div class="scorecard warn">
+      <div class="sc-label">Protocol Breaches</div>
+      <div class="sc-value red" id="sc-breach">5</div>
+      <div class="sc-delta"><span class="down">Needs attention</span></div>
+    </div>
+    <div class="scorecard blue">
+      <div class="sc-label">Avg Performance Score</div>
+      <div class="sc-value" id="sc-score">78<span style="font-size:14px">/100</span></div>
+      <div class="sc-delta"><span>+3pts</span> this week</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: FUNNEL + COMPLIANCE -->
+  <div class="grid-2">
+    <!-- LEAD FUNNEL -->
+    <div class="card">
+      <div class="card-title">Lead Funnel <span class="card-badge">Live</span></div>
+      <div class="funnel-stages" id="funnel-stages">
+        <div class="funnel-row">
+          <div class="funnel-label">New Leads</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:100%; background: #0066ff;">62</div>
+          </div>
+          <div class="funnel-count">62</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Contacted</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:82%; background: #00b8cc;">51</div>
+          </div>
+          <div class="funnel-count">51</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Qualified</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:60%; background: #00e5a0;">37</div>
+          </div>
+          <div class="funnel-count">37</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Proposal Sent</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:35%; background: #ffd166;">22</div>
+          </div>
+          <div class="funnel-count">22</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Closed Won</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:18%; background: #00e5a0;">11</div>
+          </div>
+          <div class="funnel-count">11</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Closed Lost</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:10%; background: #ff4757;">6</div>
+          </div>
+          <div class="funnel-count">6</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL COMPLIANCE -->
+    <div class="card">
+      <div class="card-title">Call Compliance Scores <span class="card-badge warn">5 Flags</span></div>
+      <div class="compliance-grid">
+        <div class="comp-item">
+          <div class="comp-label">Price Mentioned</div>
+          <div class="comp-bar-wrap">
+            <div class="comp-bar" style="width:82%; background: var(--good);"></div>
+          </div>
+          <div class="comp-pct" style="color: var(--good);">82%</div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-label">Rebuttal Handled</div>
+          <div class="comp-bar-wrap">
+            <div class="comp-bar" style="width:71%; background: var(--yellow);"></div>
+          </div>
+          <div class="comp-pct" style="color: var(--yellow);">71%</div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-label">Lead Qualified</div>
+          <div class="comp-bar-wrap">
+            <div class="comp-bar" style="width:88%; background: var(--good);"></div>
+          </div>
+          <div class="comp-pct" style="color: var(--good);">88%</div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-label">Protocol Followed</div>
+          <div class="comp-bar-wrap">
+            <div class="comp-bar" style="width:65%; background: var(--warn);"></div>
+          </div>
+          <div class="comp-pct" style="color: var(--warn);">65%</div>
+        </div>
+      </div>
+
+      <!-- AGENT COMPARE -->
+      <div style="margin-top: 20px;">
+        <div style="font-size:10px; color: var(--muted); font-family: 'Space Mono', monospace; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Agent Scores</div>
+        <div class="agent-compare" id="agent-compare">
+          <div class="agent-row">
+            <div class="agent-avatar" style="background: rgba(0,102,255,0.2); color: #0066ff;">MT</div>
+            <div class="agent-name-col">
+              <div class="agent-name">Marcus T.</div>
+              <div class="agent-role">Senior</div>
+            </div>
+            <div class="agent-bar-wrap">
+              <div class="agent-bar" style="width:87%; background: var(--good);">87</div>
+            </div>
+          </div>
+          <div class="agent-row">
+            <div class="agent-avatar" style="background: rgba(0,229,160,0.2); color: var(--accent);">DR</div>
+            <div class="agent-name-col">
+              <div class="agent-name">Diana R.</div>
+              <div class="agent-role">Mid</div>
+            </div>
+            <div class="agent-bar-wrap">
+              <div class="agent-bar" style="width:74%; background: var(--yellow);">74</div>
+            </div>
+          </div>
+          <div class="agent-row">
+            <div class="agent-avatar" style="background: rgba(255,107,53,0.2); color: var(--warn);">CM</div>
+            <div class="agent-name-col">
+              <div class="agent-name">Cole M.</div>
+              <div class="agent-role">Junior</div>
+            </div>
+            <div class="agent-bar-wrap">
+              <div class="agent-bar" style="width:61%; background: var(--warn);">61</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: LEADS TABLE + ALERTS + SCORE RING -->
+  <div class="grid-3">
+    <!-- LEADS TABLE -->
+    <div class="card">
+      <div class="card-title">Active Leads — Priority View <span class="card-badge warn">3 Overdue</span></div>
+      <table class="leads-table" id="leads-table">
+        <thead>
+          <tr>
+            <th>Lead</th>
+            <th>Priority</th>
+            <th>Stage</th>
+            <th>Agent</th>
+            <th>Follow-up</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+
+      <!-- PERFORMANCE RING -->
+      <div class="card" style="text-align:center;">
+        <div class="card-title" style="justify-content:center;">Daily Score</div>
+        <div class="score-ring-wrap">
+          <div class="ring-container">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#1e2330" stroke-width="10"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)" stroke-width="10"
+                stroke-dasharray="314" stroke-dashoffset="69" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#00e5a0"/>
+                  <stop offset="100%" stop-color="#0066ff"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-pct" id="ring-pct">78</span>
+              <span class="ring-sub">/ 100</span>
+            </div>
+          </div>
+          <div class="ring-label">Team Average</div>
+        </div>
+        <div style="display:flex; justify-content:space-around; margin-top:12px; padding-top:12px; border-top: 1px solid var(--border);">
+          <div style="text-align:center;">
+            <div style="font-size:16px; font-weight:700; font-family:'Space Mono',monospace; color:#0066ff;">87</div>
+            <div style="font-size:10px; color:var(--muted);">Marcus</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:16px; font-weight:700; font-family:'Space Mono',monospace; color:var(--yellow);">74</div>
+            <div style="font-size:10px; color:var(--muted);">Diana</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:16px; font-weight:700; font-family:'Space Mono',monospace; color:var(--warn);">61</div>
+            <div style="font-size:10px; color:var(--muted);">Cole</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERT FLAGS -->
+      <div class="card">
+        <div class="card-title">System Flags</div>
+        <div class="alert-list">
+          <div class="alert-item red">
+            <div class="alert-icon">🚨</div>
+            <div>
+              <div class="alert-text">Cole M. missed rebuttal on 3 consecutive calls</div>
+              <div class="alert-time">Today · 10:42 AM</div>
+            </div>
+          </div>
+          <div class="alert-item yellow">
+            <div class="alert-icon">⚠️</div>
+            <div>
+              <div class="alert-text">Lead #1047 (Rachel H.) overdue follow-up by 2 days</div>
+              <div class="alert-time">Today · 9:15 AM</div>
+            </div>
+          </div>
+          <div class="alert-item yellow">
+            <div class="alert-icon">⚠️</div>
+            <div>
+              <div class="alert-text">Diana R. did not mention pricing on 2 calls</div>
+              <div class="alert-time">Today · 11:30 AM</div>
+            </div>
+          </div>
+          <div class="alert-item green">
+            <div class="alert-icon">✅</div>
+            <div>
+              <div class="alert-text">Marcus T. — Full protocol compliance. 5 leads advanced</div>
+              <div class="alert-time">Today · 12:00 PM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: DAILY CALL CHART -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-title">Weekly Call Volume + Conversions</div>
+    <div class="chart-bars">
+      <div class="chart-col">
+        <div class="chart-bar" data-val="38 calls" style="height:60%; background: rgba(0,102,255,0.7);"></div>
+        <div class="chart-day">MON</div>
+      </div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="14 converted" style="height:22%; background: rgba(0,229,160,0.7);"></div>
+        <div class="chart-day">MON</div>
+      </div>
+      <div class="chart-col" style="width:4px; background: transparent;"></div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="45 calls" style="height:71%; background: rgba(0,102,255,0.7);"></div>
+        <div class="chart-day">TUE</div>
+      </div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="19 converted" style="height:30%; background: rgba(0,229,160,0.7);"></div>
+        <div class="chart-day">TUE</div>
+      </div>
+      <div class="chart-col" style="width:4px; background: transparent;"></div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="41 calls" style="height:65%; background: rgba(0,102,255,0.7);"></div>
+        <div class="chart-day">WED</div>
+      </div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="16 converted" style="height:25%; background: rgba(0,229,160,0.7);"></div>
+        <div class="chart-day">WED</div>
+      </div>
+      <div class="chart-col" style="width:4px; background: transparent;"></div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="52 calls" style="height:82%; background: rgba(0,102,255,0.7);"></div>
+        <div class="chart-day">THU</div>
+      </div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="21 converted" style="height:33%; background: rgba(0,229,160,0.7);"></div>
+        <div class="chart-day">THU</div>
+      </div>
+      <div class="chart-col" style="width:4px; background: transparent;"></div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="47 calls" style="height:74%; background: rgba(0,229,160,0.4); border: 2px solid var(--accent);"></div>
+        <div class="chart-day" style="color:var(--accent);">TODAY</div>
+      </div>
+      <div class="chart-col">
+        <div class="chart-bar" data-val="16 converted" style="height:25%; background: rgba(0,229,160,0.7);"></div>
+        <div class="chart-day" style="color:var(--accent);">TODAY</div>
+      </div>
+    </div>
+    <div class="chart-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background: rgba(0,102,255,0.7);"></div>
+        Total Calls
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: rgba(0,229,160,0.7);"></div>
+        Conversions
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  POWERED BY N8N · OPENAI · CALL TOOLS API · AUTO-REFRESH EVERY 5 MIN · BUILT BY GRACE AGHA
+</div>
+
+<script>
+  // Set date
+  const now = new Date();
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  });
+
+  // Leads data per agent
+  const allLeads = [
+    { name: 'Rachel H.', priority: 'hot', stage: 'Proposal Sent', agent: 'Marcus T.', followup: 'Today 2PM', status: 'ontrack' },
+    { name: 'Brian K.', priority: 'hot', stage: 'Qualified', agent: 'Diana R.', followup: 'Overdue 2d', status: 'overdue' },
+    { name: 'Sandra M.', priority: 'warm', stage: 'Contacted', agent: 'Cole M.', followup: 'Tomorrow', status: 'ontrack' },
+    { name: 'Tom W.', priority: 'hot', stage: 'Qualified', agent: 'Marcus T.', followup: 'Overdue 1d', status: 'overdue' },
+    { name: 'Priya S.', priority: 'warm', stage: 'New', agent: 'Diana R.', followup: 'Today 4PM', status: 'ontrack' },
+    { name: 'Carlos R.', priority: 'cold', stage: 'Contacted', agent: 'Cole M.', followup: 'Overdue 3d', status: 'overdue' },
+    { name: 'Monica L.', priority: 'warm', stage: 'Proposal Sent', agent: 'Marcus T.', followup: 'Tomorrow', status: 'ontrack' },
+    { name: 'Jeff B.', priority: 'cold', stage: 'New', agent: 'Diana R.', followup: 'Next Week', status: 'ontrack' },
+  ];
+
+  const agentLeads = {
+    marcus: allLeads.filter(l => l.agent === 'Marcus T.'),
+    diana: allLeads.filter(l => l.agent === 'Diana R.'),
+    cole: allLeads.filter(l => l.agent === 'Cole M.'),
+    all: allLeads
+  };
+
+  const agentScores = {
+    all: { calls: 47, followups: 9, conv: '34%', breach: 5, score: '78' },
+    marcus: { calls: 19, followups: 2, conv: '42%', breach: 0, score: '87' },
+    diana: { calls: 16, followups: 4, conv: '31%', breach: 2, score: '74' },
+    cole: { calls: 12, followups: 3, conv: '25%', breach: 3, score: '61' },
+  };
+
+  function renderLeads(leads) {
+    const tbody = document.getElementById('leads-tbody');
+    tbody.innerHTML = leads.map(l => `
+      <tr>
+        <td>${l.name}</td>
+        <td><span class="priority-badge p-${l.priority}">${l.priority.toUpperCase()}</span></td>
+        <td><span class="status-dot"><span class="dot ${l.stage === 'Proposal Sent' ? 'dot-blue' : l.stage === 'Qualified' ? 'dot-green' : l.stage === 'New' ? 'dot-yellow' : 'dot-green'}"></span>${l.stage}</span></td>
+        <td style="color:var(--muted); font-size:12px;">${l.agent}</td>
+        <td><span class="${l.status === 'overdue' ? 'overdue' : 'ontrack'}">${l.followup}</span></td>
+        <td><span class="dot ${l.status === 'overdue' ? 'dot-red' : 'dot-green'}" style="width:8px;height:8px;display:inline-block;border-radius:50%;"></span></td>
+      </tr>
+    `).join('');
+  }
+
+  function switchAgent(agent) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const s = agentScores[agent];
+    document.getElementById('sc-calls').textContent = s.calls;
+    document.getElementById('sc-followups').textContent = s.followups;
+    document.getElementById('sc-conv').textContent = s.conv;
+    document.getElementById('sc-breach').textContent = s.breach;
+    document.getElementById('sc-score').innerHTML = s.score + '<span style="font-size:14px">/100</span>';
+    document.getElementById('ring-pct').textContent = s.score;
+
+    renderLeads(agentLeads[agent]);
+  }
+
+  // Initial render
+  renderLeads(allLeads);
+</script>
+</body>
+</html>
